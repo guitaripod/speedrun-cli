@@ -121,6 +121,25 @@ type Region struct {
 	Name string `json:"name"`
 }
 
+type Variable struct {
+	ID       string `json:"id"`
+	Name     string `json:"name"`
+	Category string `json:"category"`
+	Values   struct {
+		Values map[string]struct {
+			Label string `json:"label"`
+			Rules string `json:"rules"`
+		} `json:"values"`
+	} `json:"values"`
+	IsSubcategory bool `json:"is-subcategory"`
+}
+
+type SubCategory struct {
+	ID    string
+	Label string
+	Rules string
+}
+
 func makeRequest(endpoint string) (*http.Response, error) {
 	client := &http.Client{Timeout: 10 * time.Second}
 	req, err := http.NewRequest("GET", apiBase+endpoint, nil)
@@ -190,8 +209,182 @@ func getGameCategories(gameID string) ([]Category, error) {
 	return categories, nil
 }
 
-func getLeaderboard(gameID, categoryID string) (*Leaderboard, error) {
-	resp, err := makeRequest(fmt.Sprintf("/leaderboards/%s/category/%s?embed=game,category,players,platforms,regions", gameID, categoryID))
+func getGameCategoriesForPlatform(gameID, platformID string) ([]Category, error) {
+	// First get all categories
+	allCategories, err := getGameCategories(gameID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Filter categories that have runs for this platform
+	var validCategories []Category
+	for _, category := range allCategories {
+		// Try to get leaderboard for this category+platform combination
+		// If it succeeds and has any data structure (even with 0 runs), include it
+		if hasRunsForPlatform(gameID, category.ID, platformID) {
+			validCategories = append(validCategories, category)
+		}
+	}
+
+	return validCategories, nil
+}
+
+func hasRunsForPlatform(gameID, categoryID, platformID string) bool {
+	endpoint := fmt.Sprintf("/leaderboards/%s/category/%s?platform=%s", gameID, categoryID, platformID)
+	resp, err := makeRequest(endpoint)
+	if err != nil {
+		return false
+	}
+	defer resp.Body.Close()
+
+	// If we get a 200 response, the combination is valid
+	// (even if there are 0 runs, the API will return a valid structure)
+	return resp.StatusCode == 200
+}
+
+func getPlatformsForCategory(gameID, categoryID string) ([]Platform, error) {
+	// First get all platforms for the game
+	allPlatforms, err := getGamePlatforms(gameID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Filter platforms that have runs for this category
+	var validPlatforms []Platform
+	for _, platform := range allPlatforms {
+		// Try to get leaderboard for this category+platform combination
+		if hasRunsForPlatform(gameID, categoryID, platform.ID) {
+			validPlatforms = append(validPlatforms, platform)
+		}
+	}
+
+	return validPlatforms, nil
+}
+
+func getCategoryVariables(categoryID string) ([]SubCategory, error) {
+	resp, err := makeRequest(fmt.Sprintf("/categories/%s/variables", categoryID))
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 200 {
+		return nil, fmt.Errorf("API request failed with status %d", resp.StatusCode)
+	}
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	var apiResp APIResponse
+	if err := json.Unmarshal(body, &apiResp); err != nil {
+		return nil, err
+	}
+
+	var variables []Variable
+	if err := json.Unmarshal(apiResp.Data, &variables); err != nil {
+		return nil, err
+	}
+
+	var subCategories []SubCategory
+	for _, variable := range variables {
+		if variable.IsSubcategory {
+			for valueID, value := range variable.Values.Values {
+				subCategories = append(subCategories, SubCategory{
+					ID:    valueID,
+					Label: value.Label,
+					Rules: value.Rules,
+				})
+			}
+		}
+	}
+
+	return subCategories, nil
+}
+
+func getVariableIDForCategory(categoryID string) string {
+	// This is a simplified approach - get the first subcategory variable ID
+	resp, err := makeRequest(fmt.Sprintf("/categories/%s/variables", categoryID))
+	if err != nil {
+		return ""
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return ""
+	}
+
+	var apiResp APIResponse
+	if err := json.Unmarshal(body, &apiResp); err != nil {
+		return ""
+	}
+
+	var variables []Variable
+	if err := json.Unmarshal(apiResp.Data, &variables); err != nil {
+		return ""
+	}
+
+	for _, variable := range variables {
+		if variable.IsSubcategory {
+			return variable.ID
+		}
+	}
+	return ""
+}
+
+func getGamePlatforms(gameID string) ([]Platform, error) {
+	resp, err := makeRequest(fmt.Sprintf("/games/%s?embed=platforms", gameID))
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 200 {
+		return nil, fmt.Errorf("API request failed with status %d", resp.StatusCode)
+	}
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	var apiResp struct {
+		Data struct {
+			Platforms struct {
+				Data []Platform `json:"data"`
+			} `json:"platforms"`
+		} `json:"data"`
+	}
+
+	if err := json.Unmarshal(body, &apiResp); err != nil {
+		return nil, err
+	}
+
+	return apiResp.Data.Platforms.Data, nil
+}
+
+func getLeaderboard(gameID, categoryID string, platformID string, variableID string) (*Leaderboard, error) {
+	var endpoint string
+	queryParams := "embed=game,category,players,platforms,regions"
+	
+	if platformID != "" {
+		queryParams += "&platform=" + platformID
+	}
+	
+	if variableID != "" {
+		// Need to find the variable name for this category to build the query
+		variables, err := getCategoryVariables(categoryID)
+		if err == nil && len(variables) > 0 {
+			// For now, assume the first variable is the subcategory variable
+			// In a more robust implementation, we'd match the variable properly
+			queryParams += "&var-" + getVariableIDForCategory(categoryID) + "=" + variableID
+		}
+	}
+	
+	endpoint = fmt.Sprintf("/leaderboards/%s/category/%s?%s", gameID, categoryID, queryParams)
+	resp, err := makeRequest(endpoint)
 	if err != nil {
 		return nil, err
 	}
@@ -522,6 +715,39 @@ func selectGame(games []Game) *Game {
 	}
 }
 
+func selectPlatform(platforms []Platform) *Platform {
+	if len(platforms) == 0 {
+		fmt.Println("No platforms found.")
+		return nil
+	}
+	
+	fmt.Printf("\nPlatforms:\n")
+	for i, platform := range platforms {
+		fmt.Printf("%d. %s (%d)\n", i+1, platform.Name, platform.Released)
+	}
+	
+	for {
+		input := getUserInput("\nEnter number (1-" + strconv.Itoa(len(platforms)) + "), 'q' to quit, 'b' to go back: ")
+		
+		if input == "q" || input == "quit" || input == ":q" {
+			return nil
+		}
+		
+		if input == "b" || input == "back" || input == ":b" {
+			return &Platform{ID: "BACK"}
+		}
+		
+		choice, err := strconv.Atoi(input)
+		if err != nil || choice < 1 || choice > len(platforms) {
+			fmt.Println("Invalid selection. Please try again.")
+			fmt.Println("Controls: [number] select, 'q' quit, 'b' back")
+			continue
+		}
+		
+		return &platforms[choice-1]
+	}
+}
+
 func selectCategory(categories []Category) *Category {
 	if len(categories) == 0 {
 		fmt.Println("No categories found.")
@@ -555,21 +781,61 @@ func selectCategory(categories []Category) *Category {
 	}
 }
 
+func selectSubCategory(subCategories []SubCategory) *SubCategory {
+	if len(subCategories) == 0 {
+		fmt.Println("No subcategories found.")
+		return nil
+	}
+	
+	fmt.Printf("\nSubcategories:\n")
+	for i, subCat := range subCategories {
+		fmt.Printf("%d. %s\n", i+1, subCat.Label)
+	}
+	
+	for {
+		input := getUserInput("\nEnter number (1-" + strconv.Itoa(len(subCategories)) + "), 'q' to quit, 'b' to go back: ")
+		
+		if input == "q" || input == "quit" || input == ":q" {
+			return nil
+		}
+		
+		if input == "b" || input == "back" || input == ":b" {
+			return &SubCategory{ID: "BACK"}
+		}
+		
+		choice, err := strconv.Atoi(input)
+		if err != nil || choice < 1 || choice > len(subCategories) {
+			fmt.Println("Invalid selection. Please try again.")
+			fmt.Println("Controls: [number] select, 'q' quit, 'b' back")
+			continue
+		}
+		
+		return &subCategories[choice-1]
+	}
+}
+
+
+
 func showHelp() {
 	fmt.Println("\n📚 Help - Speedrun.com CLI")
 	fmt.Println("============================")
-	fmt.Println("Navigation:")
-	fmt.Println("  • Enter game name to search")
+	fmt.Println("Navigation Flow:")
+	fmt.Println("  1. Search for a game")
+	fmt.Println("  2. Select a platform category (PS2, HD Console, PC, etc.)")
+	fmt.Println("  3. Select a subcategory (Any%, 100%, etc.)")
+	fmt.Println("  4. View leaderboard")
+	fmt.Println("\nControls:")
 	fmt.Println("  • Use numbers to select from lists")
 	fmt.Println("  • 'q' or ':q' - quit")
 	fmt.Println("  • 'b' or ':b' - go back")
+	fmt.Println("  • 'c' or ':c' - back to categories (from leaderboard)")
 	fmt.Println("  • 'r' - refresh current view")
 	fmt.Println("  • 'h' or 'help' - show this help")
 	fmt.Println("\nFeatures:")
 	fmt.Println("  • Fuzzy game search")
-	fmt.Println("  • Browse all categories")
-	fmt.Println("  • View detailed leaderboards")
-	fmt.Println("  • See run times, players, platforms, videos")
+	fmt.Println("  • Platform categories with subcategories")
+	fmt.Println("  • Detailed leaderboards with filtering")
+	fmt.Println("  • Run times, players, platforms, videos")
 	fmt.Println()
 }
 
@@ -608,7 +874,7 @@ func main() {
 		}
 		
 		for {
-			fmt.Printf("\nLoading categories for %s...\n", selectedGame.Names.International)
+			fmt.Printf("\nLoading platform categories for %s...\n", selectedGame.Names.International)
 			categories, err := getGameCategories(selectedGame.ID)
 			if err != nil {
 				fmt.Printf("Error loading categories: %v\n", err)
@@ -624,36 +890,60 @@ func main() {
 				break
 			}
 			
-			fmt.Printf("\nLoading leaderboard for %s - %s...\n", selectedGame.Names.International, selectedCategory.Name)
-			leaderboard, err := getLeaderboard(selectedGame.ID, selectedCategory.ID)
-			if err != nil {
-				fmt.Printf("Error loading leaderboard: %v\n", err)
-				continue
-			}
-			
-			displayLeaderboard(leaderboard)
-			
-			fmt.Println("\nControls: [Enter] continue, 'b' categories, 'q' quit, 'r' refresh")
-			input := getUserInput("Action: ")
-			
-			if input == "q" || input == "quit" || input == ":q" {
-				fmt.Println("Goodbye!")
-				os.Exit(0)
-			}
-			if input == "b" || input == "back" || input == ":b" {
-				continue
-			}
-			if input == "r" || input == "refresh" {
-				// Refresh the current leaderboard
-				fmt.Printf("Refreshing leaderboard for %s - %s...\n", selectedGame.Names.International, selectedCategory.Name)
-				leaderboard, err = getLeaderboard(selectedGame.ID, selectedCategory.ID)
+			for {
+				fmt.Printf("\nLoading subcategories for %s - %s...\n", selectedGame.Names.International, selectedCategory.Name)
+				subCategories, err := getCategoryVariables(selectedCategory.ID)
 				if err != nil {
-					fmt.Printf("Error refreshing leaderboard: %v\n", err)
+					fmt.Printf("Error loading subcategories: %v\n", err)
+					break
+				}
+				
+				selectedSubCategory := selectSubCategory(subCategories)
+				if selectedSubCategory == nil {
+					break
+				}
+				
+				if selectedSubCategory.ID == "BACK" {
+					break
+				}
+				
+				fmt.Printf("\nLoading leaderboard for %s - %s (%s)...\n", selectedGame.Names.International, selectedCategory.Name, selectedSubCategory.Label)
+				leaderboard, err := getLeaderboard(selectedGame.ID, selectedCategory.ID, "", selectedSubCategory.ID)
+				if err != nil {
+					fmt.Printf("Error loading leaderboard: %v\n", err)
 					continue
 				}
+				
 				displayLeaderboard(leaderboard)
-				continue
+				
+				fmt.Println("\nControls: [Enter] continue, 'b' back to subcategories, 'c' back to categories, 'q' quit, 'r' refresh")
+				input := getUserInput("Action: ")
+				
+				if input == "q" || input == "quit" || input == ":q" {
+					fmt.Println("Goodbye!")
+					os.Exit(0)
+				}
+				if input == "b" || input == "back" || input == ":b" {
+					// Go back to subcategory selection
+					break
+				}
+				if input == "c" || input == "category" || input == ":c" {
+					// Go back to category selection
+					goto categorySelection
+				}
+				if input == "r" || input == "refresh" {
+					// Refresh the current leaderboard
+					fmt.Printf("Refreshing leaderboard for %s - %s (%s)...\n", selectedGame.Names.International, selectedCategory.Name, selectedSubCategory.Label)
+					leaderboard, err = getLeaderboard(selectedGame.ID, selectedCategory.ID, "", selectedSubCategory.ID)
+					if err != nil {
+						fmt.Printf("Error refreshing leaderboard: %v\n", err)
+						continue
+					}
+					displayLeaderboard(leaderboard)
+					continue
+				}
 			}
+			categorySelection:
 		}
 	}
 }
