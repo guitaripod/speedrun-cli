@@ -65,6 +65,7 @@ speedrun-cli
 | `[number]` | Select from numbered lists |
 | `q` or `:q` | Quit application |
 | `b` or `:b` | Go back to previous menu |
+| `c` or `:c` | Go back to categories (from leaderboard) |
 | `r` | Refresh current view |
 | `h` or `help` | Show help information |
 
@@ -72,42 +73,58 @@ speedrun-cli
 
 1. **Search for a game**:
    ```
-   Enter game name to search: Super Mario Bros
+   Enter game name to search (or 'q' to quit): ffx
    ```
 
 2. **Select from results**:
    ```
-   Found 5 games:
-   1. Super Mario Bros. (smb1) - 1985
-   2. Super Mario Bros.: The Lost Levels (smb2j) - 1986
-   3. Super Mario Bros. 2 (smb2) - 1988
-   4. Super Mario Bros. 3 (smb3) - 1988
-   5. Super Mario Bros. 35 (smb35) - 2020
+   Found 7 games:
+   1. FFX Runner (ffx_runner) - 2006
+   2. Final Fantasy X (ffx) - 2001
+   3. Final Fantasy XV (ffxv) - 2016
+   4. Final Fantasy X-2 (ffx_2) - 2003
+   5. Final Fantasy XIV: Dawntrail (ffxiv) - 2013
+   6. Final Fantasy XV: Pocket Edition (ffxv_pocket) - 2018
+   7. Final Fantasy XII: Revenant Wings (ffxiirw) - 2007
    
-   Enter number (1-5): 1
+   Enter number (1-7), 'q' to quit: 2
    ```
 
-3. **Choose a category**:
+3. **Choose a platform category**:
    ```
+   Loading platform categories for Final Fantasy X...
+   
    Categories:
-   1. Any% (fullgame)
-   2. Any% Warpless (fullgame)
-   3. 8-4 IL (level)
-   4. All Levels (level)
+   1. PS2 (per-game)
+   2. HD Console (per-game)
+   3. PC (per-game)
+   4. Cutscene Remover (per-game)
    
-   Enter number (1-4): 1
+   Enter number (1-4), 'q' to quit, 'b' to go back: 1
    ```
 
-4. **View the leaderboard**:
+4. **Select a subcategory**:
    ```
-   🏆 Super Mario Bros. - Any%
-   📊 https://www.speedrun.com/smb1#Any
+   Loading subcategories for Final Fantasy X - PS2...
    
-   #    Player             Time         Platform     Date       Video  Emu    Comment
-   ────────────────────────────────────────────────────────────────────────────────────
-   🥇   niftski            4:54.798     NES          2021-04-15 ✅     ❌     World Record!
-   🥈   Kosmic             4:55.230     NES          2018-12-04 ✅     ❌     -
-   🥉   somewes            4:56.245     NES          2016-01-05 ✅     ❌     -
+   Subcategories:
+   1. JP Any%
+   2. No Sphere Grid
+   3. Any%
+   4. Nemesis
+   
+   Enter number (1-4), 'q' to quit, 'b' to go back: 3
+   ```
+
+5. **View the leaderboard**:
+   ```
+   🏆 Final Fantasy X - PS2
+   📊 https://www.speedrun.com/ffx#PS2
+   
+   Rank Player               Time            Platform        Date       Video Emu Comment
+   ────────────────────────────────────────────────────────────────────────────────────────────────────
+   🥇1  CaracarnVi           9:32:31.000     PlayStation 2   2025-01-19 ✅     ❌   Got all the skips this...
+   🥈2  oddmog               9:37:58.000     PlayStation 2   2024-10-01 ✅     ❌   yeah, we are just not ...
    ```
 
 ## 🛠️ Development
