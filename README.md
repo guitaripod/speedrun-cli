@@ -1,5 +1,8 @@
 # 🏃 Speedrun CLI
 
+![image](https://github.com/user-attachments/assets/910e96d7-daca-4c25-b986-a5dbebd62356)
+
+
 A production-ready command-line interface for browsing speedrun.com leaderboards. Search for games, navigate categories, and view detailed run information directly from your terminal.
 
 ## ✨ Features
