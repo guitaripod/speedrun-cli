@@ -41,7 +41,7 @@ sudo cp build/speedrun-cli-macos-arm64 /usr/local/bin/speedrun-cli
 Requirements: Go 1.18 or later
 
 ```bash
-git clone <repository>
+git clone git@github.com:marcusziade/speedrun-cli.git
 cd speedrun-cli
 go build -o speedrun-cli .
 ```
