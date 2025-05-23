@@ -5,11 +5,30 @@ import (
 	"os"
 )
 
+var (
+	Version   = "dev"
+	BuildTime = "unknown"
+	Commit    = "unknown"
+)
+
 func main() {
+	if len(os.Args) > 1 {
+		switch os.Args[1] {
+		case "--version", "-v":
+			fmt.Printf("speedrun-cli version %s\n", Version)
+			fmt.Printf("Built: %s\n", BuildTime)
+			fmt.Printf("Commit: %s\n", Commit)
+			return
+		case "--help", "-h":
+			showHelp()
+			return
+		}
+	}
+
 	api := NewSpeedrunAPI()
 	nav := NewNavigationStack()
 	
-	fmt.Println("🏃 Speedrun.com CLI - Game Leaderboard Browser")
+	fmt.Printf("🏃 Speedrun.com CLI v%s - Game Leaderboard Browser\n", Version)
 	fmt.Println("==============================================")
 	fmt.Println("Type 'h' or 'help' for instructions")
 	

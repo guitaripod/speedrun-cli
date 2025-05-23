@@ -228,10 +228,25 @@ func (api *SpeedrunAPI) GetPlatformsForCategory(gameID, categoryID string) ([]Pl
 	}
 
 	validPlatforms := make([]Platform, 0, len(allPlatforms))
-	
+	resultChan := make(chan struct {
+		platform Platform
+		valid    bool
+	}, len(allPlatforms))
+
 	for _, platform := range allPlatforms {
-		if api.CheckPlatformForCategory(gameID, categoryID, platform.ID) {
-			validPlatforms = append(validPlatforms, platform)
+		go func(p Platform) {
+			valid := api.CheckPlatformForCategory(gameID, categoryID, p.ID)
+			resultChan <- struct {
+				platform Platform
+				valid    bool
+			}{platform: p, valid: valid}
+		}(platform)
+	}
+
+	for i := 0; i < len(allPlatforms); i++ {
+		result := <-resultChan
+		if result.valid {
+			validPlatforms = append(validPlatforms, result.platform)
 		}
 	}
 
