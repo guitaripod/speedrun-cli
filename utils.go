@@ -12,7 +12,7 @@ import (
 const (
 	APIBase               = "https://www.speedrun.com/api/v1"
 	UserAgent             = "speedrun-cli/1.0"
-	DefaultTimeout        = 10
+	DefaultTimeout        = 30
 	MaxRetries            = 3
 	BackoffBase           = 2
 	MaxRankWithMedal      = 3

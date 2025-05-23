@@ -20,17 +20,17 @@ type SpeedrunAPI struct {
 func NewSpeedrunAPI() *SpeedrunAPI {
 	return &SpeedrunAPI{
 		client: &http.Client{
-			Timeout: DefaultTimeout * time.Second,
+			Timeout: 0, // No timeout on client, we'll handle it with context
 		},
 		userCache: make(map[string]*User),
 	}
 }
 
-func (api *SpeedrunAPI) makeRequest(endpoint string) (*http.Response, error) {
+func (api *SpeedrunAPI) makeRequest(endpoint string) ([]byte, error) {
 	return api.makeRequestWithRetry(endpoint, MaxRetries)
 }
 
-func (api *SpeedrunAPI) makeRequestWithRetry(endpoint string, retries int) (*http.Response, error) {
+func (api *SpeedrunAPI) makeRequestWithRetry(endpoint string, retries int) ([]byte, error) {
 	var lastErr error
 	
 	for attempt := 0; attempt <= retries; attempt++ {
@@ -53,10 +53,10 @@ func (api *SpeedrunAPI) makeRequestWithRetry(endpoint string, retries int) (*htt
 		req.Header.Set("User-Agent", UserAgent)
 		
 		ctx, cancel := context.WithTimeout(context.Background(), DefaultTimeout*time.Second)
+		defer cancel()
 		req = req.WithContext(ctx)
 		
 		resp, err := api.client.Do(req)
-		cancel()
 		
 		if err != nil {
 			lastErr = &APIError{
@@ -90,7 +90,19 @@ func (api *SpeedrunAPI) makeRequestWithRetry(endpoint string, retries int) (*htt
 			}
 		}
 		
-		return resp, nil
+		// Read the response body before the context expires
+		body, err := io.ReadAll(resp.Body)
+		resp.Body.Close()
+		
+		if err != nil {
+			lastErr = &APIError{
+				Message: fmt.Sprintf("failed to read response body: %v", err),
+				Context: "response reading",
+			}
+			continue
+		}
+		
+		return body, nil
 	}
 	
 	return nil, lastErr
@@ -100,18 +112,12 @@ func (api *SpeedrunAPI) SearchGames(query string) ([]Game, error) {
 	debugLog("Searching for games with query: %s", query)
 	
 	encodedQuery := url.QueryEscape(query)
-	resp, err := api.makeRequest(fmt.Sprintf("/games?name=%s&max=20&embed=categories", encodedQuery))
+	fmt.Print("🔍 Searching for games...")
+	body, err := api.makeRequest(fmt.Sprintf("/games?name=%s&max=20&embed=categories", encodedQuery))
+	fmt.Print("\r                         \r") // Clear the loading message
+	
 	if err != nil {
 		return nil, err
-	}
-	defer resp.Body.Close()
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, &APIError{
-			Message: fmt.Sprintf("failed to read response body: %v", err),
-			Context: "response parsing",
-		}
 	}
 
 	var apiResp APIResponse
@@ -137,18 +143,9 @@ func (api *SpeedrunAPI) SearchGames(query string) ([]Game, error) {
 func (api *SpeedrunAPI) GetGameCategories(gameID string) ([]Category, error) {
 	debugLog("Fetching categories for game: %s", gameID)
 	
-	resp, err := api.makeRequest(fmt.Sprintf("/games/%s/categories", gameID))
+	body, err := api.makeRequest(fmt.Sprintf("/games/%s/categories", gameID))
 	if err != nil {
 		return nil, err
-	}
-	defer resp.Body.Close()
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, &APIError{
-			Message: fmt.Sprintf("failed to read response body: %v", err),
-			Context: "response parsing",
-		}
 	}
 
 	var apiResp APIResponse
@@ -174,18 +171,9 @@ func (api *SpeedrunAPI) GetGameCategories(gameID string) ([]Category, error) {
 func (api *SpeedrunAPI) GetGamePlatforms(gameID string) ([]Platform, error) {
 	debugLog("Fetching platforms for game: %s", gameID)
 	
-	resp, err := api.makeRequest(fmt.Sprintf("/games/%s?embed=platforms", gameID))
+	body, err := api.makeRequest(fmt.Sprintf("/games/%s?embed=platforms", gameID))
 	if err != nil {
 		return nil, err
-	}
-	defer resp.Body.Close()
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, &APIError{
-			Message: fmt.Sprintf("failed to read response body: %v", err),
-			Context: "response parsing",
-		}
 	}
 
 	var apiResp struct {
@@ -209,14 +197,13 @@ func (api *SpeedrunAPI) GetGamePlatforms(gameID string) ([]Platform, error) {
 
 func (api *SpeedrunAPI) CheckPlatformForCategory(gameID, categoryID, platformID string) bool {
 	endpoint := fmt.Sprintf("/leaderboards/%s/category/%s?platform=%s", gameID, categoryID, platformID)
-	resp, err := api.makeRequest(endpoint)
+	_, err := api.makeRequest(endpoint)
 	if err != nil {
 		debugLog("Platform check failed for %s/%s/%s: %v", gameID, categoryID, platformID, err)
 		return false
 	}
-	defer resp.Body.Close()
 	
-	return resp.StatusCode == 200
+	return true
 }
 
 func (api *SpeedrunAPI) GetPlatformsForCategory(gameID, categoryID string) ([]Platform, error) {
@@ -257,18 +244,9 @@ func (api *SpeedrunAPI) GetPlatformsForCategory(gameID, categoryID string) ([]Pl
 func (api *SpeedrunAPI) GetCategoryVariables(categoryID string) ([]SubCategory, error) {
 	debugLog("Fetching variables for category: %s", categoryID)
 	
-	resp, err := api.makeRequest(fmt.Sprintf("/categories/%s/variables", categoryID))
+	body, err := api.makeRequest(fmt.Sprintf("/categories/%s/variables", categoryID))
 	if err != nil {
 		return nil, err
-	}
-	defer resp.Body.Close()
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, &APIError{
-			Message: fmt.Sprintf("failed to read response body: %v", err),
-			Context: "response parsing",
-		}
 	}
 
 	var apiResp APIResponse
@@ -305,13 +283,7 @@ func (api *SpeedrunAPI) GetCategoryVariables(categoryID string) ([]SubCategory, 
 }
 
 func (api *SpeedrunAPI) GetVariableIDForCategory(categoryID string) string {
-	resp, err := api.makeRequest(fmt.Sprintf("/categories/%s/variables", categoryID))
-	if err != nil {
-		return ""
-	}
-	defer resp.Body.Close()
-
-	body, err := io.ReadAll(resp.Body)
+	body, err := api.makeRequest(fmt.Sprintf("/categories/%s/variables", categoryID))
 	if err != nil {
 		return ""
 	}
@@ -352,18 +324,14 @@ func (api *SpeedrunAPI) GetLeaderboard(gameID, categoryID, platformID, variableI
 	}
 	
 	endpoint = fmt.Sprintf("/leaderboards/%s/category/%s?%s", gameID, categoryID, queryParams)
-	resp, err := api.makeRequest(endpoint)
+	
+	// Show progress for potentially slow leaderboard requests
+	fmt.Print("⏳ Loading leaderboard data...")
+	body, err := api.makeRequest(endpoint)
+	fmt.Print("\r                              \r") // Clear the loading message
+	
 	if err != nil {
 		return nil, err
-	}
-	defer resp.Body.Close()
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, &APIError{
-			Message: fmt.Sprintf("failed to read response body: %v", err),
-			Context: "response parsing",
-		}
 	}
 
 	var apiResp struct {
@@ -417,18 +385,17 @@ func (api *SpeedrunAPI) GetUserData(userID string) *User {
 	}
 	api.cacheMux.RUnlock()
 
-	resp, err := api.makeRequest(fmt.Sprintf("/users/%s", userID))
+	body, err := api.makeRequest(fmt.Sprintf("/users/%s", userID))
 	if err != nil {
 		debugLog("Failed to fetch user data for %s: %v", userID, err)
 		return nil
 	}
-	defer resp.Body.Close()
 
 	var response struct {
 		Data User `json:"data"`
 	}
 
-	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
+	if err := json.Unmarshal(body, &response); err != nil {
 		debugLog("Failed to decode user data for %s: %v", userID, err)
 		return nil
 	}

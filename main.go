@@ -51,7 +51,6 @@ func main() {
 			continue
 		}
 		
-		fmt.Println("Searching for games...")
 		games, err := api.SearchGames(query)
 		if err != nil {
 			fmt.Printf("Error searching games: %v\n", err)
@@ -66,7 +65,7 @@ func main() {
 		nav.Push("game")
 		
 		for nav.Current() == "game" {
-			fmt.Printf("\nLoading categories for %s...\n", selectedGame.Names.International)
+			fmt.Printf("\n📋 Loading categories for %s...\n", selectedGame.Names.International)
 			categories, err := api.GetGameCategories(selectedGame.ID)
 			if err != nil {
 				fmt.Printf("Error loading categories: %v\n", err)
@@ -88,7 +87,7 @@ func main() {
 			nav.Push("category")
 			
 			for nav.Current() == "category" {
-				fmt.Printf("\nLoading subcategories for %s - %s...\n", selectedGame.Names.International, selectedCategory.Name)
+				fmt.Printf("\n🏷️  Loading subcategories for %s - %s...\n", selectedGame.Names.International, selectedCategory.Name)
 				subCategories, err := api.GetCategoryVariables(selectedCategory.ID)
 				if err != nil {
 					fmt.Printf("Error loading subcategories: %v\n", err)
@@ -110,7 +109,7 @@ func main() {
 				nav.Push("subcategory")
 				
 				for nav.Current() == "subcategory" {
-					fmt.Printf("\nLoading leaderboard for %s - %s (%s)...\n", 
+					fmt.Printf("\n🏆 Loading leaderboard for %s - %s (%s)...\n", 
 						selectedGame.Names.International, selectedCategory.Name, selectedSubCategory.Label)
 					
 					leaderboard, err := api.GetLeaderboard(selectedGame.ID, selectedCategory.ID, "", selectedSubCategory.ID)
