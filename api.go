@@ -314,7 +314,7 @@ func (api *SpeedrunAPI) GetLeaderboard(gameID, categoryID, platformID, variableI
 	debugLog("Fetching leaderboard for %s/%s (platform: %s, variable: %s)", gameID, categoryID, platformID, variableID)
 	
 	var endpoint string
-	queryParams := "embed=game,category,platforms&top=50" // Limit to top 50, remove players and regions embed
+	queryParams := "embed=game,category,platforms" // Remove players and regions embed for performance
 	
 	if platformID != "" {
 		queryParams += "&platform=" + platformID

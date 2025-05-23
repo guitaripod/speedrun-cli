@@ -32,8 +32,8 @@ func displayLeaderboard(lb *Leaderboard) {
 	
 	headerFormat := fmt.Sprintf("%%-%ds%%-%ds %%-15s %%-%ds %%-10s %%-5s %%-3s %%s\n", 
 		6, playerWidth, platformWidth)
-	rowFormat := fmt.Sprintf("%%-%ds%%-%ds %%-15s %%-%ds %%-10s %%-5s %%-3s %%s\n", 
-		6, playerWidth, platformWidth)
+	rowFormat := fmt.Sprintf("%%s%%-%ds %%-15s %%-%ds %%-10s %%-5s %%-3s %%s\n", 
+		playerWidth, platformWidth)
 	
 	fmt.Printf(headerFormat, "Rank", "Player", "Time", "Platform", "Date", "Video", "Emu", "Comment")
 	fmt.Println(strings.Repeat("─", 6+playerWidth+15+platformWidth+10+5+3+commentWidth+8))
@@ -126,12 +126,12 @@ func getPlatformName(run Run, platformMap map[string]string) string {
 func formatRank(place int, colors Colors) string {
 	switch place {
 	case 1:
-		return fmt.Sprintf("%s🥇%s  ", colors.Gold, colors.Reset)
+		return fmt.Sprintf("%s🥇%s    ", colors.Gold, colors.Reset)
 	case 2:
-		return fmt.Sprintf("%s🥈%s  ", colors.Silver, colors.Reset)
+		return fmt.Sprintf("%s🥈%s    ", colors.Silver, colors.Reset)
 	case 3:
-		return fmt.Sprintf("%s🥉%s  ", colors.Bronze, colors.Reset)
+		return fmt.Sprintf("%s🥉%s    ", colors.Bronze, colors.Reset)
 	default:
-		return fmt.Sprintf("%-5d", place)
+		return fmt.Sprintf("%-6d", place)
 	}
 }
