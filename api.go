@@ -220,6 +220,8 @@ func (api *SpeedrunAPI) GetPlatformsForCategory(gameID, categoryID string) ([]Pl
 		valid    bool
 	}, len(allPlatforms))
 
+	fmt.Printf("🔍 Checking %d platforms...", len(allPlatforms))
+	
 	for _, platform := range allPlatforms {
 		go func(p Platform) {
 			valid := api.CheckPlatformForCategory(gameID, categoryID, p.ID)
@@ -236,6 +238,8 @@ func (api *SpeedrunAPI) GetPlatformsForCategory(gameID, categoryID string) ([]Pl
 			validPlatforms = append(validPlatforms, result.platform)
 		}
 	}
+	
+	fmt.Print("\r                                \r") // Clear the checking message
 
 	debugLog("Found %d valid platforms for category", len(validPlatforms))
 	return validPlatforms, nil
@@ -310,7 +314,7 @@ func (api *SpeedrunAPI) GetLeaderboard(gameID, categoryID, platformID, variableI
 	debugLog("Fetching leaderboard for %s/%s (platform: %s, variable: %s)", gameID, categoryID, platformID, variableID)
 	
 	var endpoint string
-	queryParams := "embed=game,category,players,platforms,regions"
+	queryParams := "embed=game,category,platforms&top=50" // Limit to top 50, remove players and regions embed
 	
 	if platformID != "" {
 		queryParams += "&platform=" + platformID

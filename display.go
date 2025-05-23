@@ -31,12 +31,12 @@ func displayLeaderboard(lb *Leaderboard) {
 	commentWidth := calculateDynamicWidth(comments, 30)
 	
 	headerFormat := fmt.Sprintf("%%-%ds%%-%ds %%-15s %%-%ds %%-10s %%-5s %%-3s %%s\n", 
-		5, playerWidth, platformWidth)
+		6, playerWidth, platformWidth)
 	rowFormat := fmt.Sprintf("%%-%ds%%-%ds %%-15s %%-%ds %%-10s %%-5s %%-3s %%s\n", 
-		5, playerWidth, platformWidth)
+		6, playerWidth, platformWidth)
 	
 	fmt.Printf(headerFormat, "Rank", "Player", "Time", "Platform", "Date", "Video", "Emu", "Comment")
-	fmt.Println(strings.Repeat("─", 5+playerWidth+15+platformWidth+10+5+3+commentWidth+8))
+	fmt.Println(strings.Repeat("─", 6+playerWidth+15+platformWidth+10+5+3+commentWidth+8))
 	
 	for _, entry := range lb.Runs {
 		playerName := getPlayerDisplayName(entry.Run)
@@ -132,6 +132,6 @@ func formatRank(place int, colors Colors) string {
 	case 3:
 		return fmt.Sprintf("%s🥉3%s ", colors.Bronze, colors.Reset)
 	default:
-		return fmt.Sprintf("%d", place)
+		return fmt.Sprintf("%-4d", place)
 	}
 }
