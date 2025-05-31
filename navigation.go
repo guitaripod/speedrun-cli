@@ -51,6 +51,7 @@ type UserChoice struct {
 	IsRefresh bool
 	IsCategory bool
 	IsHelp   bool
+	IsUser   bool
 }
 
 func getUserInput(prompt string) string {
@@ -78,6 +79,8 @@ func parseUserInput(input string) UserChoice {
 		choice.IsCategory = true
 	case "h", "help":
 		choice.IsHelp = true
+	case "u", "user":
+		choice.IsUser = true
 	default:
 		if index, err := strconv.Atoi(input); err == nil && index > 0 {
 			choice.Index = index - 1
@@ -94,7 +97,7 @@ func getUserChoice(prompt string, maxOptions int, allowBack bool) UserChoice {
 		input := getUserInput(prompt)
 		choice := parseUserInput(input)
 		
-		if choice.IsQuit || choice.IsHelp {
+		if choice.IsQuit || choice.IsHelp || choice.IsUser {
 			return choice
 		}
 		
@@ -249,25 +252,57 @@ func handleLeaderboardNavigation() UserChoice {
 	return parseUserInput(input)
 }
 
+func selectUser(users []User) *User {
+	if len(users) == 0 {
+		fmt.Println("No users found.")
+		return nil
+	}
+	
+	if len(users) == 1 {
+		fmt.Printf("Found exact match: %s\n", users[0].Names.International)
+		return &users[0]
+	}
+	
+	fmt.Printf("\nFound %d users:\n", len(users))
+	for i, user := range users {
+		fmt.Printf("%d. %s (ID: %s)\n", i+1, user.Names.International, user.ID)
+	}
+	
+	choice := getUserChoice("\nEnter number to select, 'q' to quit: ", len(users), false)
+	
+	if choice.IsQuit {
+		return nil
+	}
+	
+	if choice.Index >= 0 {
+		return &users[choice.Index]
+	}
+	
+	return nil
+}
+
 func showHelp() {
 	fmt.Println("\n📚 Help - Speedrun.com CLI")
 	fmt.Println("============================")
 	fmt.Println("Navigation Flow:")
-	fmt.Println("  1. Search for a game")
-	fmt.Println("  2. Select a platform category (PS2, HD Console, PC, etc.)")
-	fmt.Println("  3. Select a subcategory (Any%, 100%, etc.)")
-	fmt.Println("  4. View leaderboard")
+	fmt.Println("  1. Search for a game OR search for a user")
+	fmt.Println("     • Game: Search for a game → Select categories → View leaderboard")
+	fmt.Println("     • User: Search for a user → View their recent runs with placements")
+	fmt.Println("  2. For games: Select platform category and subcategory")
+	fmt.Println("  3. View leaderboard or user runs")
 	fmt.Println("\nControls:")
 	fmt.Println("  • Use numbers to select from lists")
 	fmt.Println("  • 'q' or ':q' - quit")
 	fmt.Println("  • 'b' or ':b' - go back")
 	fmt.Println("  • 'c' or ':c' - back to categories (from leaderboard)")
 	fmt.Println("  • 'r' - refresh current view")
+	fmt.Println("  • 'u' or 'user' - search for users instead of games")
 	fmt.Println("  • 'h' or 'help' - show this help")
 	fmt.Println("\nFeatures:")
-	fmt.Println("  • Fuzzy game search")
+	fmt.Println("  • Fuzzy game and user search")
 	fmt.Println("  • Platform categories with subcategories")
 	fmt.Println("  • Detailed leaderboards with filtering")
+	fmt.Println("  • User run history with placements and medals")
 	fmt.Println("  • Run times, players, platforms, videos")
 	fmt.Println()
 }

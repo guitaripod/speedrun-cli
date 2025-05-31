@@ -97,6 +97,40 @@ type User struct {
 	} `json:"names"`
 }
 
+type UserRun struct {
+	ID        string    `json:"id"`
+	Weblink   string    `json:"weblink"`
+	Game      Game      `json:"game"`
+	Category  Category  `json:"category"`
+	Date      string    `json:"date"`
+	Submitted time.Time `json:"submitted"`
+	Times     struct {
+		Primary        string `json:"primary"`
+		Realtime       string `json:"realtime"`
+		RealtimeNoLoads string `json:"realtime_noloads"`
+		Ingame         string `json:"ingame"`
+	} `json:"times"`
+	Players []struct {
+		Rel  string `json:"rel"`
+		ID   string `json:"id"`
+		Name string `json:"name"`
+		URI  string `json:"uri"`
+	} `json:"players"`
+	System struct {
+		Platform string `json:"platform"`
+		Emulated bool   `json:"emulated"`
+		Region   string `json:"region"`
+	} `json:"system"`
+	Videos struct {
+		Text  string `json:"text"`
+		Links []struct {
+			URI string `json:"uri"`
+		} `json:"links"`
+	} `json:"videos"`
+	Comment string `json:"comment"`
+	Place   int    `json:"place"`
+}
+
 type Platform struct {
 	ID       string `json:"id"`
 	Name     string `json:"name"`

@@ -33,7 +33,7 @@ func main() {
 	fmt.Println("Type 'h' or 'help' for instructions")
 	
 	for {
-		query := getUserInput("\nEnter game name to search (or 'q' to quit): ")
+		query := getUserInput("\nEnter game name to search (or 'u' for user search, 'q' to quit): ")
 		
 		choice := parseUserInput(query)
 		
@@ -44,6 +44,11 @@ func main() {
 		
 		if choice.IsHelp {
 			showHelp()
+			continue
+		}
+		
+		if choice.IsUser {
+			handleUserSearch(api)
 			continue
 		}
 		
@@ -150,5 +155,65 @@ func main() {
 				}
 			}
 		}
+	}
+}
+
+func handleUserSearch(api *SpeedrunAPI) {
+	for {
+		userQuery := getUserInput("\nEnter username to search (or 'b' to go back): ")
+		
+		choice := parseUserInput(userQuery)
+		
+		if choice.IsQuit {
+			fmt.Println("Goodbye! 👋")
+			return
+		}
+		
+		if choice.IsBack {
+			return
+		}
+		
+		if choice.IsHelp {
+			showHelp()
+			continue
+		}
+		
+		if userQuery == "" {
+			continue
+		}
+		
+		users, err := api.SearchUsers(userQuery)
+		if err != nil {
+			fmt.Printf("Error searching users: %v\n", err)
+			continue
+		}
+		
+		selectedUser := selectUser(users)
+		if selectedUser == nil {
+			continue
+		}
+		
+		runs, err := api.GetUserRuns(selectedUser.ID)
+		if err != nil {
+			fmt.Printf("Error loading user runs: %v\n", err)
+			continue
+		}
+		
+		displayUserRuns(selectedUser, runs)
+		
+		fmt.Println("\nPress Enter to continue, 'b' to go back, 'q' to quit:")
+		input := getUserInput("")
+		navChoice := parseUserInput(input)
+		
+		if navChoice.IsQuit {
+			fmt.Println("Goodbye! 👋")
+			return
+		}
+		
+		if navChoice.IsBack {
+			continue
+		}
+		
+		return
 	}
 }

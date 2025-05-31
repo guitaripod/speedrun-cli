@@ -411,6 +411,174 @@ func (api *SpeedrunAPI) GetUserData(userID string) *User {
 	return &response.Data
 }
 
+func (api *SpeedrunAPI) SearchUsers(query string) ([]User, error) {
+	debugLog("Searching for users with query: %s", query)
+	
+	encodedQuery := url.QueryEscape(query)
+	fmt.Print("🔍 Searching for users...")
+	body, err := api.makeRequest(fmt.Sprintf("/users?lookup=%s&max=20", encodedQuery))
+	fmt.Print("\r                         \r")
+	
+	if err != nil {
+		return nil, err
+	}
+
+	var apiResp APIResponse
+	if err := json.Unmarshal(body, &apiResp); err != nil {
+		return nil, &APIError{
+			Message: fmt.Sprintf("failed to parse JSON: %v", err),
+			Context: "JSON parsing",
+		}
+	}
+
+	var users []User
+	if err := json.Unmarshal(apiResp.Data, &users); err != nil {
+		return nil, &APIError{
+			Message: fmt.Sprintf("failed to parse users data: %v", err),
+			Context: "users data parsing",
+		}
+	}
+
+	debugLog("Found %d users", len(users))
+	return users, nil
+}
+
+func (api *SpeedrunAPI) GetUserRuns(userID string) ([]UserRun, error) {
+	debugLog("Fetching runs for user: %s", userID)
+	
+	fmt.Print("⏳ Loading user runs...")
+	body, err := api.makeRequest(fmt.Sprintf("/runs?user=%s&embed=game,category&orderby=date&direction=desc&max=25", userID))
+	fmt.Print("\r                      \r")
+	
+	if err != nil {
+		return nil, err
+	}
+
+	var apiResp struct {
+		Data []struct {
+			ID       string          `json:"id"`
+			Weblink  string          `json:"weblink"`
+			Game     json.RawMessage `json:"game"`
+			Category json.RawMessage `json:"category"`
+			Date     string          `json:"date"`
+			Submitted time.Time      `json:"submitted"`
+			Times    struct {
+				Primary        string `json:"primary"`
+				Realtime       string `json:"realtime"`
+				RealtimeNoLoads string `json:"realtime_noloads"`
+				Ingame         string `json:"ingame"`
+			} `json:"times"`
+			Players []struct {
+				Rel  string `json:"rel"`
+				ID   string `json:"id"`
+				Name string `json:"name"`
+				URI  string `json:"uri"`
+			} `json:"players"`
+			System struct {
+				Platform string `json:"platform"`
+				Emulated bool   `json:"emulated"`
+				Region   string `json:"region"`
+			} `json:"system"`
+			Status struct {
+				Status string `json:"status"`
+				Reason string `json:"reason"`
+			} `json:"status"`
+			Videos struct {
+				Text  string `json:"text"`
+				Links []struct {
+					URI string `json:"uri"`
+				} `json:"links"`
+			} `json:"videos"`
+			Comment string `json:"comment"`
+			Place   int    `json:"place"`
+		} `json:"data"`
+		Embedded struct {
+			Games []struct {
+				Data Game `json:"data"`
+			} `json:"games"`
+			Categories []struct {
+				Data Category `json:"data"`
+			} `json:"categories"`
+		} `json:"embedded"`
+	}
+	
+	if err := json.Unmarshal(body, &apiResp); err != nil {
+		return nil, &APIError{
+			Message: fmt.Sprintf("failed to parse JSON: %v", err),
+			Context: "JSON parsing",
+		}
+	}
+
+	gameMap := make(map[string]Game)
+	for _, gameWrapper := range apiResp.Embedded.Games {
+		gameMap[gameWrapper.Data.ID] = gameWrapper.Data
+	}
+
+	categoryMap := make(map[string]Category)
+	for _, categoryWrapper := range apiResp.Embedded.Categories {
+		categoryMap[categoryWrapper.Data.ID] = categoryWrapper.Data
+	}
+
+	var userRuns []UserRun
+	for _, runData := range apiResp.Data {
+		if runData.Status.Status != "verified" {
+			continue
+		}
+
+		userRun := UserRun{
+			ID:       runData.ID,
+			Weblink:  runData.Weblink,
+			Date:     runData.Date,
+			Submitted: runData.Submitted,
+			Times:    runData.Times,
+			Players:  runData.Players,
+			System:   runData.System,
+			Videos:   runData.Videos,
+			Comment:  runData.Comment,
+			Place:    runData.Place,
+		}
+
+		// Try to parse game as string ID first, then as object
+		var gameID string
+		if err := json.Unmarshal(runData.Game, &gameID); err != nil {
+			// If it's not a string, try parsing as an object
+			var gameData struct {
+				Data Game `json:"data"`
+			}
+			if err := json.Unmarshal(runData.Game, &gameData); err == nil {
+				userRun.Game = gameData.Data
+			}
+		} else {
+			// It's a string ID, look it up in the map
+			if game, exists := gameMap[gameID]; exists {
+				userRun.Game = game
+			}
+		}
+
+		// Try to parse category as string ID first, then as object
+		var categoryID string
+		if err := json.Unmarshal(runData.Category, &categoryID); err != nil {
+			// If it's not a string, try parsing as an object
+			var categoryData struct {
+				Data Category `json:"data"`
+			}
+			if err := json.Unmarshal(runData.Category, &categoryData); err == nil {
+				userRun.Category = categoryData.Data
+			}
+		} else {
+			// It's a string ID, look it up in the map
+			if category, exists := categoryMap[categoryID]; exists {
+				userRun.Category = category
+			}
+		}
+
+		userRuns = append(userRuns, userRun)
+	}
+
+	debugLog("Found %d verified runs for user", len(userRuns))
+	return userRuns, nil
+}
+
 func fetchUserData(userID string) *struct {
 	Names struct {
 		International string `json:"international"`

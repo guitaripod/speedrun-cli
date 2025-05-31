@@ -135,3 +135,97 @@ func formatRank(place int, colors Colors) string {
 		return fmt.Sprintf("%-6d", place)
 	}
 }
+
+func displayUserRuns(user *User, runs []UserRun) {
+	colors := DefaultColors
+	
+	fmt.Printf("\n👤 %s - Recent Submitted Runs\n", user.Names.International)
+	fmt.Printf("📊 Showing %d verified runs\n\n", len(runs))
+	
+	if len(runs) == 0 {
+		fmt.Println("No verified runs found for this user.")
+		return
+	}
+	
+	gameNames := make([]string, len(runs))
+	categoryNames := make([]string, len(runs))
+	comments := make([]string, len(runs))
+	
+	for i, run := range runs {
+		gameNames[i] = run.Game.Names.International
+		categoryNames[i] = run.Category.Name
+		comments[i] = cleanComment(run.Comment)
+	}
+	
+	gameWidth := calculateDynamicWidth(gameNames, 25)
+	categoryWidth := calculateDynamicWidth(categoryNames, 20)
+	commentWidth := calculateDynamicWidth(comments, 25)
+	
+	headerFormat := fmt.Sprintf("%%-%ds%%-%ds %%-15s %%-%ds %%-10s %%-6s %%-5s %%-3s %%s\n", 
+		6, gameWidth, categoryWidth)
+	rowFormat := fmt.Sprintf("%%s%%-%ds %%-15s %%-%ds %%-10s %%-6s %%-5s %%-3s %%s\n", 
+		gameWidth, categoryWidth)
+	
+	fmt.Printf(headerFormat, "Place", "Game", "Time", "Category", "Date", "Status", "Video", "Emu", "Comment")
+	fmt.Println(strings.Repeat("─", 6+gameWidth+15+categoryWidth+10+6+5+3+commentWidth+9))
+	
+	for _, run := range runs {
+		gameName := run.Game.Names.International
+		categoryName := run.Category.Name
+		
+		time := getUserRunTime(run)
+		
+		hasVideo := "❌"
+		if len(run.Videos.Links) > 0 && run.Videos.Links[0].URI != "" {
+			hasVideo = "✅"
+		}
+		
+		emulated := "❌"
+		if run.System.Emulated {
+			emulated = "✅"
+		}
+		
+		comment := cleanComment(run.Comment)
+		
+		var rank string
+		var status string
+		if run.Place > 0 {
+			rank = formatRank(run.Place, colors)
+			status = fmt.Sprintf("#%d", run.Place)
+		} else {
+			rank = "    - "
+			status = "Unranked"
+		}
+		
+		fmt.Printf(rowFormat,
+			rank,
+			truncateString(gameName, gameWidth),
+			time,
+			truncateString(categoryName, categoryWidth),
+			run.Date,
+			status,
+			hasVideo,
+			emulated,
+			truncateString(comment, commentWidth))
+	}
+	
+	fmt.Printf("\n📈 Showing %d runs\n", len(runs))
+}
+
+func getUserRunTime(run UserRun) string {
+	times := []string{
+		run.Times.Primary,
+		run.Times.Realtime,
+		run.Times.RealtimeNoLoads,
+		run.Times.Ingame,
+	}
+	
+	for _, timeStr := range times {
+		formatted := formatTime(timeStr)
+		if formatted != EmptyValuePlaceholder {
+			return formatted
+		}
+	}
+	
+	return EmptyValuePlaceholder
+}
