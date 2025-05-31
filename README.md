@@ -8,6 +8,7 @@ A production-ready command-line interface for browsing speedrun.com leaderboards
 ## ✨ Features
 
 - **🔍 Smart Game Search**: Fuzzy search across speedrun.com's game database
+- **👤 User Search**: Search for users and view their personal best runs
 - **📊 Detailed Leaderboards**: View comprehensive run data including times, platforms, videos, and more
 - **🎮 Category Navigation**: Browse all categories for any game
 - **⌨️  Vim-style Controls**: Familiar navigation with vim-inspired commands
@@ -62,6 +63,7 @@ speedrun-cli
 | Command | Action |
 |---------|--------|
 | `[game name]` | Search for a game |
+| `u` | Search for users |
 | `[number]` | Select from numbered lists |
 | `q` or `:q` | Quit application |
 | `b` or `:b` | Go back to previous menu |
@@ -73,7 +75,7 @@ speedrun-cli
 
 1. **Search for a game**:
    ```
-   Enter game name to search (or 'q' to quit): ffx
+   Enter game name to search (or 'u' for user search, 'q' to quit): ffx
    ```
 
 2. **Select from results**:
@@ -127,6 +129,39 @@ speedrun-cli
    🥈2  oddmog               9:37:58.000     PlayStation 2   2024-10-01 ✅     ❌   yeah, we are just not ...
    ```
 
+### User Search Workflow
+
+1. **Search for users**:
+   ```
+   Enter game name to search (or 'u' for user search, 'q' to quit): u
+   ```
+
+2. **Enter username**:
+   ```
+   Enter username to search (or 'b' to go back): speedrunner123
+   ```
+
+3. **Select from user results**:
+   ```
+   Found 3 users:
+   1. speedrunner123 (John Doe)
+   2. speedrunner123_alt (John D.)
+   3. speedrunner1234 (Jane Smith)
+   
+   Enter number (1-3), 'q' to quit, 'b' to go back: 1
+   ```
+
+4. **View user's personal best runs**:
+   ```
+   👤 User: speedrunner123 (John Doe)
+   🏃 Personal Best Runs:
+   
+   Game                     Category        Time         Rank  Date       Platform
+   ────────────────────────────────────────────────────────────────────────────────
+   Super Mario 64          Any%            16:12.450    #42   2025-01-15 Nintendo 64
+   The Legend of Zelda     Any%            31:45.230    #18   2025-01-10 NES
+   ```
+
 ## 🛠️ Development
 
 ### Project Structure
@@ -150,6 +185,8 @@ The application uses the official speedrun.com REST API:
 ### Key Features Implementation
 
 - **Game Search**: Uses `/games?name=query` with fuzzy matching
+- **User Search**: Uses `/users?name=query` to find users by username
+- **User Runs**: Fetches personal bests via `/users/{id}/personal-bests`
 - **Categories**: Fetches via `/games/{id}/categories`
 - **Leaderboards**: Retrieved from `/leaderboards/{game}/category/{category}`
 - **Time Parsing**: Handles multiple time formats (PT format, seconds)
