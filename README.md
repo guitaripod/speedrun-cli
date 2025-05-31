@@ -154,7 +154,7 @@ speedrun-cli
 4. **View user's runs**:
    ```
    👤 User: speedrunner123 (John Doe)
-   🏃 Personal Best Runs:
+   🏃 Recent Runs:
    
    Game                     Category        Time         Rank  Date       Platform
    ────────────────────────────────────────────────────────────────────────────────
@@ -186,7 +186,7 @@ The application uses the official speedrun.com REST API:
 
 - **Game Search**: Uses `/games?name=query` with fuzzy matching
 - **User Search**: Uses `/users?name=query` to find users by username
-- **User Runs**: Fetches personal bests via `/users/{id}/personal-bests`
+- User Runs: Fetches recents via `/users/{id}/personal-bests`
 - **Categories**: Fetches via `/games/{id}/categories`
 - **Leaderboards**: Retrieved from `/leaderboards/{game}/category/{category}`
 - **Time Parsing**: Handles multiple time formats (PT format, seconds)
