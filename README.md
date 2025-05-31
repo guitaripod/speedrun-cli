@@ -8,7 +8,7 @@ A production-ready command-line interface for browsing speedrun.com leaderboards
 ## ✨ Features
 
 - **🔍 Smart Game Search**: Fuzzy search across speedrun.com's game database
-- **👤 User Search**: Search for users and view their personal best runs
+- **👤 User Search**: Search for users and their runs
 - **📊 Detailed Leaderboards**: View comprehensive run data including times, platforms, videos, and more
 - **🎮 Category Navigation**: Browse all categories for any game
 - **⌨️  Vim-style Controls**: Familiar navigation with vim-inspired commands
@@ -151,7 +151,7 @@ speedrun-cli
    Enter number (1-3), 'q' to quit, 'b' to go back: 1
    ```
 
-4. **View user's personal best runs**:
+4. **View user's runs**:
    ```
    👤 User: speedrunner123 (John Doe)
    🏃 Personal Best Runs:
