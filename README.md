@@ -15,6 +15,7 @@ A production-ready command-line interface for browsing speedrun.com leaderboards
 - **🌍 Cross-platform**: Runs on Linux, macOS, and Windows
 - **🚀 Zero Dependencies**: Uses only Go standard library
 - **📱 Responsive Display**: Clean, compact formatting that works in any terminal
+- **📄 Leaderboard Pagination**: Navigate large leaderboards with 25 entries per page
 
 ## 🚀 Installation
 
@@ -69,6 +70,9 @@ speedrun-cli
 | `b` or `:b` | Go back to previous menu |
 | `c` or `:c` | Go back to categories (from leaderboard) |
 | `r` | Refresh current view |
+| `n` or `next` | Next page (in leaderboards) |
+| `p` or `prev` | Previous page (in leaderboards) |
+| `p[number]` | Jump to specific page (e.g., `p3` for page 3) |
 | `h` or `help` | Show help information |
 
 ### Example Workflow
@@ -127,6 +131,10 @@ speedrun-cli
    ────────────────────────────────────────────────────────────────────────────────────────────────────
    🥇1  CaracarnVi           9:32:31.000     PlayStation 2   2025-01-19 ✅     ❌   Got all the skips this...
    🥈2  oddmog               9:37:58.000     PlayStation 2   2024-10-01 ✅     ❌   yeah, we are just not ...
+   
+   📈 Page 1/3 (Showing 1-25 of 67 runs)
+   
+   Controls: 'n' next page, 'p1-p3' jump to page, 'b' back, 'c' categories, 'q' quit, 'r' refresh
    ```
 
 ### User Search Workflow
