@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-func displayLeaderboard(lb *Leaderboard) {
+func displayLeaderboard(lb *Leaderboard, page int) int {
 	colors := DefaultColors
 	
 	fmt.Printf("\n🏆 %s - %s\n", lb.Game.Data.Names.International, lb.Category.Data.Name)
@@ -13,14 +13,38 @@ func displayLeaderboard(lb *Leaderboard) {
 	
 	if len(lb.Runs) == 0 {
 		fmt.Println("No runs found for this category.")
-		return
+		return 0
 	}
 	
-	playerNames := make([]string, len(lb.Runs))
-	platforms := make([]string, len(lb.Runs))
-	comments := make([]string, len(lb.Runs))
+	// Pagination constants
+	const pageSize = 25
+	totalRuns := len(lb.Runs)
+	totalPages := (totalRuns + pageSize - 1) / pageSize
 	
-	for i, entry := range lb.Runs {
+	// Validate page number
+	if page < 1 {
+		page = 1
+	}
+	if page > totalPages {
+		page = totalPages
+	}
+	
+	// Calculate slice bounds
+	startIdx := (page - 1) * pageSize
+	endIdx := startIdx + pageSize
+	if endIdx > totalRuns {
+		endIdx = totalRuns
+	}
+	
+	// Get page runs
+	pageRuns := lb.Runs[startIdx:endIdx]
+	
+	// Calculate widths for this page
+	playerNames := make([]string, len(pageRuns))
+	platforms := make([]string, len(pageRuns))
+	comments := make([]string, len(pageRuns))
+	
+	for i, entry := range pageRuns {
 		playerNames[i] = getPlayerDisplayName(entry.Run)
 		platforms[i] = getPlatformName(entry.Run, lb.PlatformMap)
 		comments[i] = cleanComment(entry.Run.Comment)
@@ -38,7 +62,7 @@ func displayLeaderboard(lb *Leaderboard) {
 	fmt.Printf(headerFormat, "Rank", "Player", "Time", "Platform", "Date", "Video", "Emu", "Comment")
 	fmt.Println(strings.Repeat("─", 6+playerWidth+15+platformWidth+10+5+3+commentWidth+8))
 	
-	for _, entry := range lb.Runs {
+	for _, entry := range pageRuns {
 		playerName := getPlayerDisplayName(entry.Run)
 		
 		time := getBestTime(entry.Run)
@@ -69,7 +93,9 @@ func displayLeaderboard(lb *Leaderboard) {
 			truncateString(comment, commentWidth))
 	}
 	
-	fmt.Printf("\n📈 Showing %d runs\n", len(lb.Runs))
+	fmt.Printf("\n📈 Page %d/%d (Showing %d-%d of %d runs)\n", page, totalPages, startIdx+1, endIdx, totalRuns)
+	
+	return totalPages
 }
 
 func getPlayerDisplayName(run Run) string {

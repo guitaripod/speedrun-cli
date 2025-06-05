@@ -52,6 +52,9 @@ type UserChoice struct {
 	IsCategory bool
 	IsHelp   bool
 	IsUser   bool
+	IsNext   bool
+	IsPrev   bool
+	PageNum  int
 }
 
 func getUserInput(prompt string) string {
@@ -66,6 +69,7 @@ func parseUserInput(input string) UserChoice {
 	
 	choice := UserChoice{
 		Index: -1,
+		PageNum: -1,
 	}
 	
 	switch input {
@@ -81,8 +85,20 @@ func parseUserInput(input string) UserChoice {
 		choice.IsHelp = true
 	case "u", "user":
 		choice.IsUser = true
+	case "n", "next":
+		choice.IsNext = true
+	case "p", "prev":
+		choice.IsPrev = true
 	default:
-		if index, err := strconv.Atoi(input); err == nil && index > 0 {
+		// Check if it's a page number (e.g., "p5" for page 5)
+		if strings.HasPrefix(input, "p") && len(input) > 1 {
+			pageStr := input[1:]
+			if pageNum, err := strconv.Atoi(pageStr); err == nil && pageNum > 0 {
+				choice.PageNum = pageNum
+			} else {
+				choice.Command = input
+			}
+		} else if index, err := strconv.Atoi(input); err == nil && index > 0 {
 			choice.Index = index - 1
 		} else {
 			choice.Command = input
@@ -246,8 +262,23 @@ func selectSubCategory(subCategories []SubCategory) *SubCategory {
 	return nil
 }
 
-func handleLeaderboardNavigation() UserChoice {
-	fmt.Println("\nControls: [Enter] continue, 'b' back to subcategories, 'c' back to categories, 'q' quit, 'r' refresh")
+func handleLeaderboardNavigation(currentPage, totalPages int) UserChoice {
+	navigationText := "\nControls: "
+	controls := []string{}
+	
+	if totalPages > 1 {
+		if currentPage > 1 {
+			controls = append(controls, "'p' previous page")
+		}
+		if currentPage < totalPages {
+			controls = append(controls, "'n' next page")
+		}
+		controls = append(controls, fmt.Sprintf("'p1-p%d' jump to page", totalPages))
+	}
+	
+	controls = append(controls, "'b' back", "'c' categories", "'q' quit", "'r' refresh")
+	
+	fmt.Printf("%s%s\n", navigationText, strings.Join(controls, ", "))
 	input := getUserInput("Action: ")
 	return parseUserInput(input)
 }
@@ -298,11 +329,16 @@ func showHelp() {
 	fmt.Println("  • 'r' - refresh current view")
 	fmt.Println("  • 'u' or 'user' - search for users instead of games")
 	fmt.Println("  • 'h' or 'help' - show this help")
+	fmt.Println("\nLeaderboard Navigation (for large leaderboards):")
+	fmt.Println("  • 'n' or 'next' - go to next page")
+	fmt.Println("  • 'p' or 'prev' - go to previous page")
+	fmt.Println("  • 'p1', 'p2', etc. - jump to specific page")
 	fmt.Println("\nFeatures:")
 	fmt.Println("  • Fuzzy game and user search")
 	fmt.Println("  • Platform categories with subcategories")
 	fmt.Println("  • Detailed leaderboards with filtering")
 	fmt.Println("  • User run history with placements and medals")
 	fmt.Println("  • Run times, players, platforms, videos")
+	fmt.Println("  • Pagination for large leaderboards (25 entries per page)")
 	fmt.Println()
 }

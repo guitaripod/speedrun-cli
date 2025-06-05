@@ -124,32 +124,58 @@ func main() {
 						break
 					}
 					
-					displayLeaderboard(leaderboard)
+					currentPage := 1
+					totalPages := 1
+					refreshRequested := false
 					
-					choice := handleLeaderboardNavigation()
-					
-					if choice.IsQuit {
-						fmt.Println("Goodbye! 👋")
-						os.Exit(0)
+					for {
+						totalPages = displayLeaderboard(leaderboard, currentPage)
+						
+						choice := handleLeaderboardNavigation(currentPage, totalPages)
+						
+						if choice.IsQuit {
+							fmt.Println("Goodbye! 👋")
+							os.Exit(0)
+						}
+						
+						if choice.IsBack {
+							nav.Pop()
+							break
+						}
+						
+						if choice.IsCategory {
+							nav.Pop()
+							nav.Pop()
+							break
+						}
+						
+						if choice.IsRefresh {
+							refreshRequested = true
+							break // Will reload the leaderboard
+						}
+						
+						if choice.IsHelp {
+							showHelp()
+							continue
+						}
+						
+						if choice.IsNext && currentPage < totalPages {
+							currentPage++
+							continue
+						}
+						
+						if choice.IsPrev && currentPage > 1 {
+							currentPage--
+							continue
+						}
+						
+						if choice.PageNum > 0 && choice.PageNum <= totalPages {
+							currentPage = choice.PageNum
+							continue
+						}
 					}
 					
-					if choice.IsBack {
-						nav.Pop()
-						break
-					}
-					
-					if choice.IsCategory {
-						nav.Pop()
-						nav.Pop()
-						break
-					}
-					
-					if choice.IsRefresh {
-						continue
-					}
-					
-					if choice.IsHelp {
-						showHelp()
+					if refreshRequested {
 						continue
 					}
 				}
