@@ -16,6 +16,9 @@ speedrun-cli-*
 build/
 dist/
 
+# GoReleaser artifacts
+.goreleaser/
+
 # Go workspace file
 go.work
 
