@@ -1,5 +1,17 @@
 # 🏃 Speedrun CLI
 
+[![Go Version](https://img.shields.io/github/go-mod/go-version/marcusziade/speedrun-cli)](https://go.dev/)
+[![Go Report Card](https://goreportcard.com/badge/github.com/marcusziade/speedrun-cli)](https://goreportcard.com/report/github.com/marcusziade/speedrun-cli)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Release](https://img.shields.io/github/v/release/marcusziade/speedrun-cli)](https://github.com/marcusziade/speedrun-cli/releases)
+[![Downloads](https://img.shields.io/github/downloads/marcusziade/speedrun-cli/total)](https://github.com/marcusziade/speedrun-cli/releases)
+[![GitHub Stars](https://img.shields.io/github/stars/marcusziade/speedrun-cli?style=social)](https://github.com/marcusziade/speedrun-cli/stargazers)
+[![GitHub Issues](https://img.shields.io/github/issues/marcusziade/speedrun-cli)](https://github.com/marcusziade/speedrun-cli/issues)
+[![GitHub Pull Requests](https://img.shields.io/github/issues-pr/marcusziade/speedrun-cli)](https://github.com/marcusziade/speedrun-cli/pulls)
+[![Contributors](https://img.shields.io/github/contributors/marcusziade/speedrun-cli)](https://github.com/marcusziade/speedrun-cli/graphs/contributors)
+[![Last Commit](https://img.shields.io/github/last-commit/marcusziade/speedrun-cli)](https://github.com/marcusziade/speedrun-cli/commits/master)
+[![Code Size](https://img.shields.io/github/languages/code-size/marcusziade/speedrun-cli)](https://github.com/marcusziade/speedrun-cli)
+
 ![image](https://github.com/user-attachments/assets/d5d7322a-8b86-45e4-8ac2-a5b1949f3510)
 
 
