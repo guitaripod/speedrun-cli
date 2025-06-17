@@ -90,6 +90,26 @@ release:
   footer: |
     **Full Changelog**: https://github.com/marcusziade/speedrun-cli/compare/{{ .PreviousTag }}...{{ .Tag }}
 
+brews:
+  - name: speedrun-cli
+    repository:
+      owner: marcusziade
+      name: homebrew-tap
+      branch: master
+      token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
+    commit_author:
+      name: marcusziade
+      email: marcus@ziade.se
+    commit_msg_template: "Brew formula update for {{ .ProjectName }} version {{ .Tag }}"
+    homepage: "https://github.com/marcusziade/speedrun-cli"
+    description: "Browse speedrun.com leaderboards from your terminal"
+    license: "MIT"
+    folder: Formula
+    test: |
+      system "#{bin}/speedrun-cli", "--version"
+    install: |
+      bin.install "speedrun-cli"
+
 # The lines beneath this are called `modelines`. See `:help modeline`
 # Feel free to remove those if you don't want/use them.
 # yaml-language-server: $schema=https://goreleaser.com/static/schema.json
