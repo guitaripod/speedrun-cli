@@ -32,27 +32,22 @@ A production-ready command-line interface for browsing speedrun.com leaderboards
 
 ## 🚀 Installation
 
+### Homebrew (macOS)
+
+```bash
+brew tap marcusziade/tap
+brew install speedrun-cli
+```
+
+To update to the latest version:
+```bash
+brew update
+brew upgrade speedrun-cli
+```
+
 ### Pre-built Binaries
 
-1. Run the build script to generate binaries for all platforms:
-```bash
-./build.sh
-```
-
-2. Copy the appropriate binary for your platform:
-```bash
-# Linux
-sudo cp build/speedrun-cli-linux-amd64 /usr/local/bin/speedrun-cli
-
-# macOS (Intel)
-sudo cp build/speedrun-cli-macos-amd64 /usr/local/bin/speedrun-cli
-
-# macOS (Apple Silicon)
-sudo cp build/speedrun-cli-macos-arm64 /usr/local/bin/speedrun-cli
-
-# Windows
-# Copy build/speedrun-cli-windows-amd64.exe to a directory in your PATH
-```
+Download the latest release from the [releases page](https://github.com/marcusziade/speedrun-cli/releases).
 
 ### Build from Source
 
@@ -189,7 +184,12 @@ speedrun-cli
 
 ```
 speedrun-cli/
-├── main.go          # Main application code
+├── main.go          # Main application entry point
+├── api.go           # Speedrun.com API client
+├── display.go       # Terminal display functions
+├── models.go        # Data structures
+├── navigation.go    # Navigation state management
+├── utils.go         # Utility functions
 ├── build.sh         # Cross-platform build script
 ├── go.mod           # Go module definition
 └── README.md        # This file
