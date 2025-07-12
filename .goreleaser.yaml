@@ -78,7 +78,7 @@ changelog:
 
 release:
   github:
-    owner: marcusziade
+    owner: guitaripod
     name: speedrun-cli
   draft: false
   prerelease: auto
@@ -88,7 +88,7 @@ release:
     
     A production-ready command-line interface for browsing speedrun.com leaderboards.
   footer: |
-    **Full Changelog**: https://github.com/marcusziade/speedrun-cli/compare/{{ .PreviousTag }}...{{ .Tag }}
+    **Full Changelog**: https://github.com/guitaripod/speedrun-cli/compare/{{ .PreviousTag }}...{{ .Tag }}
 
 brews:
   - name: speedrun-cli

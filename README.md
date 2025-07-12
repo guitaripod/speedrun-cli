@@ -1,17 +1,17 @@
 # 🏃 Speedrun CLI
 
-[![Go Version](https://img.shields.io/github/go-mod/go-version/marcusziade/speedrun-cli)](https://go.dev/)
-[![Release](https://img.shields.io/github/v/release/marcusziade/speedrun-cli)](https://github.com/marcusziade/speedrun-cli/releases)
-[![Downloads](https://img.shields.io/github/downloads/marcusziade/speedrun-cli/total)](https://github.com/marcusziade/speedrun-cli/releases)
+[![Go Version](https://img.shields.io/github/go-mod/go-version/guitaripod/speedrun-cli)](https://go.dev/)
+[![Release](https://img.shields.io/github/v/release/guitaripod/speedrun-cli)](https://github.com/guitaripod/speedrun-cli/releases)
+[![Downloads](https://img.shields.io/github/downloads/guitaripod/speedrun-cli/total)](https://github.com/guitaripod/speedrun-cli/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Go Report Card](https://goreportcard.com/badge/github.com/marcusziade/speedrun-cli?style=flat)](https://goreportcard.com/report/github.com/marcusziade/speedrun-cli)
-[![GitHub Stars](https://img.shields.io/github/stars/marcusziade/speedrun-cli?style=social)](https://github.com/marcusziade/speedrun-cli/stargazers)
+[![Go Report Card](https://goreportcard.com/badge/github.com/guitaripod/speedrun-cli?style=flat)](https://goreportcard.com/report/github.com/guitaripod/speedrun-cli)
+[![GitHub Stars](https://img.shields.io/github/stars/guitaripod/speedrun-cli?style=social)](https://github.com/guitaripod/speedrun-cli/stargazers)
 
-[![GitHub Issues](https://img.shields.io/github/issues/marcusziade/speedrun-cli)](https://github.com/marcusziade/speedrun-cli/issues)
-[![GitHub Pull Requests](https://img.shields.io/github/issues-pr/marcusziade/speedrun-cli)](https://github.com/marcusziade/speedrun-cli/pulls)
-[![Contributors](https://img.shields.io/github/contributors/marcusziade/speedrun-cli)](https://github.com/marcusziade/speedrun-cli/graphs/contributors)
-[![Last Commit](https://img.shields.io/github/last-commit/marcusziade/speedrun-cli)](https://github.com/marcusziade/speedrun-cli/commits/master)
-[![Code Size](https://img.shields.io/github/languages/code-size/marcusziade/speedrun-cli)](https://github.com/marcusziade/speedrun-cli)
+[![GitHub Issues](https://img.shields.io/github/issues/guitaripod/speedrun-cli)](https://github.com/guitaripod/speedrun-cli/issues)
+[![GitHub Pull Requests](https://img.shields.io/github/issues-pr/guitaripod/speedrun-cli)](https://github.com/guitaripod/speedrun-cli/pulls)
+[![Contributors](https://img.shields.io/github/contributors/guitaripod/speedrun-cli)](https://github.com/guitaripod/speedrun-cli/graphs/contributors)
+[![Last Commit](https://img.shields.io/github/last-commit/guitaripod/speedrun-cli)](https://github.com/guitaripod/speedrun-cli/commits/master)
+[![Code Size](https://img.shields.io/github/languages/code-size/guitaripod/speedrun-cli)](https://github.com/guitaripod/speedrun-cli)
 
 ![image](https://github.com/user-attachments/assets/d5d7322a-8b86-45e4-8ac2-a5b1949f3510)
 
@@ -54,7 +54,7 @@ Download the latest release from the [releases page](https://github.com/marcuszi
 Requirements: Go 1.18 or later
 
 ```bash
-git clone git@github.com:marcusziade/speedrun-cli.git
+git clone git@github.com:guitaripod/speedrun-cli.git
 cd speedrun-cli
 go build -o speedrun-cli .
 ```
